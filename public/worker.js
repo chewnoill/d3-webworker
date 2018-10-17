@@ -16,7 +16,8 @@ onmessage = function(event) {
 
     .force(
       "bounce",
-      forceBounce()
+      d3
+        .forceBounce()
         .elasticity(0.9)
         .radius(function(d) {
           return d.radius;
@@ -29,9 +30,10 @@ onmessage = function(event) {
         .br({ x: width, y: height })
     );
 
-  simulation.tick();
-
-  postMessage({ type: "end", nodes: nodes });
+  while (true) {
+    simulation.tick();
+    postMessage({ type: "tick", nodes: nodes });
+  }
 };
 
 const boundingBox = () => {

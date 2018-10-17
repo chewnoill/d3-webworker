@@ -10,24 +10,30 @@ const images = {
 class App extends React.Component {
   width = 500;
   height = 500;
+  frames = [];
 
   state = {
     nodes: []
   };
 
   componentDidMount() {
+    this.startWebWorker();
+  }
+
+  startWebWorker = () => {
     this.worker = new Worker("/worker.js");
 
     this.worker.onmessage = function(event) {
       console.log(event);
       switch (event.data.type) {
-        case "end":
-          return this.ticked(event.data);
+        case "tick":
+          return this.ticked(event.data.nodes);
       }
     };
-    console.log("start");
     this.tick();
-  }
+  };
+
+  stopWebWorker = () => this.worker.terminate();
 
   tick = () =>
     this.worker.postMessage({
@@ -37,6 +43,14 @@ class App extends React.Component {
     });
 
   ticked = nodes => {
+    this.frames = [...this.frames, nodes];
+  };
+
+  renderFrame = () => {
+    if (this.frames.length === 0) {
+      return;
+    }
+    const nodes = this.frames.pop();
     console.log(nodes);
     this.setState({ nodes }, this.tick);
     const { height, width } = this;
@@ -78,7 +92,10 @@ class App extends React.Component {
           }
         ]
       },
-      this.updateSimulation
+      () => {
+        this.stopWebWorker();
+        this.startWebWorker();
+      }
     );
   };
 
