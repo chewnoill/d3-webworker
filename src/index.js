@@ -23,8 +23,7 @@ class App extends React.Component {
   startWebWorker = () => {
     this.worker = new Worker("/worker.js");
 
-    this.worker.onmessage = function(event) {
-      console.log(event);
+    this.worker.onmessage = event => {
       switch (event.data.type) {
         case "tick":
           return this.ticked(event.data.nodes);
@@ -33,7 +32,10 @@ class App extends React.Component {
     this.tick();
   };
 
-  stopWebWorker = () => this.worker.terminate();
+  stopWebWorker = () => {
+    this.worker.terminate();
+    this.worker = null;
+  };
 
   tick = () =>
     this.worker.postMessage({
@@ -49,7 +51,12 @@ class App extends React.Component {
   renderFrame = () => {
     if (this.frames.length === 0) {
       return;
+    } else if (this.frames.length > 60 && this.worker) {
+      this.stopWebWorker();
+    } else if (!this.worker) {
+      this.startWebWorker();
     }
+
     const nodes = this.frames.pop();
     console.log(nodes);
     this.setState({ nodes }, this.tick);
