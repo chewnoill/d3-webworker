@@ -1,0 +1,18 @@
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+circle {
+}
+circle.github {
+  fill: blue;
+}
+.github {
+  z-index: 1;
+  width: 50px;
+  height: 50px;
+  fill: yellowgreen;
+  background-image: "https://uploads.codesandbox.io/uploads/user/a5f27acd-52ea-4937-aa25-cc88eef8b611/JJUS-GitHub-Mark-32px.png";
+  background-size: 10px 10px;
+}
