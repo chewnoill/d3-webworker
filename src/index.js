@@ -18,13 +18,13 @@ class App extends React.Component {
 
   componentDidMount() {
     this.startWebWorker();
+    setInterval(this.renderFrame, 5);
   }
 
   startWebWorker = () => {
     this.worker = new Worker("/worker.js");
 
-    this.worker.onmessage = function(event) {
-      console.log(event);
+    this.worker.onmessage = event => {
       switch (event.data.type) {
         case "tick":
           return this.ticked(event.data.nodes);
@@ -33,8 +33,6 @@ class App extends React.Component {
     this.tick();
   };
 
-  stopWebWorker = () => this.worker.terminate();
-
   tick = () =>
     this.worker.postMessage({
       nodes: this.state.nodes,
@@ -42,17 +40,25 @@ class App extends React.Component {
       width: this.width
     });
 
+  stopWebWorker = () => {
+    this.worker && this.worker.terminate();
+    this.worker = null;
+  };
+
   ticked = nodes => {
-    this.frames = [...this.frames, nodes];
+    this.frames = [...this.frames, ...nodes];
   };
 
   renderFrame = () => {
+    console.log(`frame buffer ${this.frames.length}`);
     if (this.frames.length === 0) {
       return;
+    } else if (this.frames.length < 60) {
+      this.setState({ nodes: this.frames[this.frames.length - 1] });
+      this.tick();
     }
-    const nodes = this.frames.pop();
-    console.log(nodes);
-    this.setState({ nodes }, this.tick);
+
+    const nodes = this.frames.shift();
     const { height, width } = this;
     var u = d3
       .select("svg")
@@ -78,23 +84,23 @@ class App extends React.Component {
   };
 
   addNode = () => {
+    console.log(this.frames);
     this.setState(
       {
         nodes: [
-          ...this.state.nodes,
+          ...this.frames[this.frames.length - 1],
           {
             radius: 20,
             x: this.width / 2 - 2 + Math.random() * 4,
             y: -10,
-            vy: 10,
+            vy: 5,
             vx: 0,
             image: "github"
           }
         ]
       },
       () => {
-        this.stopWebWorker();
-        this.startWebWorker();
+        this.tick();
       }
     );
   };

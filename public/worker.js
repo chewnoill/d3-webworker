@@ -29,11 +29,11 @@ onmessage = function(event) {
         .tl({ x: 0, y: -100 })
         .br({ x: width, y: height })
     );
-
-  while (true) {
+  var frames = Array(30).map(() => {
     simulation.tick();
-    postMessage({ type: "tick", nodes: nodes });
-  }
+    return nodes;
+  });
+  postMessage({ type: "tick", nodes: nodes });
 };
 
 const boundingBox = () => {
