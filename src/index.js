@@ -18,6 +18,7 @@ class App extends React.Component {
 
   componentDidMount() {
     this.startWebWorker();
+    setInterval(this.renderFrame, 0);
   }
 
   startWebWorker = () => {
@@ -29,37 +30,33 @@ class App extends React.Component {
           return this.ticked(event.data.nodes);
       }
     };
-    this.tick();
-  };
-
-  stopWebWorker = () => {
-    this.worker.terminate();
-    this.worker = null;
-  };
-
-  tick = () =>
     this.worker.postMessage({
       nodes: this.state.nodes,
       height: this.height,
       width: this.width
     });
+  };
+
+  stopWebWorker = () => {
+    this.worker && this.worker.terminate();
+    this.worker = null;
+  };
 
   ticked = nodes => {
     this.frames = [...this.frames, nodes];
   };
 
   renderFrame = () => {
+    console.log(`render frame ${this.frames.length}`);
     if (this.frames.length === 0) {
       return;
-    } else if (this.frames.length > 60 && this.worker) {
+    } else if (this.frames.length > 60) {
       this.stopWebWorker();
-    } else if (!this.worker) {
+    } else {
       this.startWebWorker();
     }
 
     const nodes = this.frames.pop();
-    console.log(nodes);
-    this.setState({ nodes }, this.tick);
     const { height, width } = this;
     var u = d3
       .select("svg")
