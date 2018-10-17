@@ -18,7 +18,7 @@ class App extends React.Component {
 
   componentDidMount() {
     this.startWebWorker();
-    setInterval(this.renderFrame, 0);
+    setInterval(this.renderFrame, 5);
   }
 
   startWebWorker = () => {
@@ -30,12 +30,15 @@ class App extends React.Component {
           return this.ticked(event.data.nodes);
       }
     };
+    this.tick();
+  };
+
+  tick = () =>
     this.worker.postMessage({
       nodes: this.state.nodes,
       height: this.height,
       width: this.width
     });
-  };
 
   stopWebWorker = () => {
     this.worker && this.worker.terminate();
@@ -43,20 +46,19 @@ class App extends React.Component {
   };
 
   ticked = nodes => {
-    this.frames = [...this.frames, nodes];
+    this.frames = [...this.frames, ...nodes];
   };
 
   renderFrame = () => {
-    console.log(`render frame ${this.frames.length}`);
+    console.log(`frame buffer ${this.frames.length}`);
     if (this.frames.length === 0) {
       return;
-    } else if (this.frames.length > 60) {
-      this.stopWebWorker();
-    } else {
-      this.startWebWorker();
+    } else if (this.frames.length < 60) {
+      this.setState({ nodes: this.frames[this.frames.length - 1] });
+      this.tick();
     }
 
-    const nodes = this.frames.pop();
+    const nodes = this.frames.shift();
     const { height, width } = this;
     var u = d3
       .select("svg")
@@ -82,23 +84,23 @@ class App extends React.Component {
   };
 
   addNode = () => {
+    console.log(this.frames);
     this.setState(
       {
         nodes: [
-          ...this.state.nodes,
+          ...this.frames[this.frames.length - 1],
           {
             radius: 20,
             x: this.width / 2 - 2 + Math.random() * 4,
             y: -10,
-            vy: 10,
+            vy: 5,
             vx: 0,
             image: "github"
           }
         ]
       },
       () => {
-        this.stopWebWorker();
-        this.startWebWorker();
+        this.tick();
       }
     );
   };
